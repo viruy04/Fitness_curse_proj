@@ -1,35 +1,21 @@
-"""
-Routes and views for the bottle application.
-"""
-
 from bottle import route, view
 from datetime import datetime
+from db import get_connection
 
 @route('/')
 @route('/home')
 @view('index')
 def home():
-    """Renders the home page."""
-    return dict(
-        year=datetime.now().year
-    )
+    conn = get_connection()
+    cur = conn.cursor()
 
-@route('/contact')
-@view('contact')
-def contact():
-    """Renders the contact page."""
-    return dict(
-        title='Contact',
-        message='Your contact page.',
-        year=datetime.now().year
-    )
+    cur.execute("SELECT current_schema();")
+    schema = cur.fetchone()[0]
 
-@route('/about')
-@view('about')
-def about():
-    """Renders the about page."""
+    cur.close()
+    conn.close()
+
     return dict(
-        title='About',
-        message='Your application description page.',
-        year=datetime.now().year
+        year=datetime.now().year,
+        schema=schema
     )
