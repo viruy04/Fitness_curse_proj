@@ -1,3 +1,9 @@
-% rebase('layout.tpl', title='Home Page', year=year)
-<h1>НАЗВАНИЕ СХЕМЫ</h1>
-<p>Schema: {{schema}}</p>
+% rebase('layout.tpl', title='Tables', year=year)
+
+<h1>Таблицы схемы fitness_postgres</h1>
+
+<ul>
+% for t in tables:
+    <li>{{t[0]}}</li>
+% end
+</ul>

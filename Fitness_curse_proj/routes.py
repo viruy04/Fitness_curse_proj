@@ -9,13 +9,20 @@ def home():
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT current_schema();")
-    schema = cur.fetchone()[0]
+    # список таблиц в нужной схеме
+    cur.execute("""
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'fitness_postgres'
+        ORDER BY table_name;
+    """)
+
+    tables = cur.fetchall()
 
     cur.close()
     conn.close()
 
     return dict(
-        year=datetime.now().year,
-        schema=schema
+        tables=tables,
+        year=datetime.now().year
     )
