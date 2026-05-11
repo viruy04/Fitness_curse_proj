@@ -1,27 +1,21 @@
-% rebase('layout.tpl', title='Вход', year=year)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
 
-<h1>Вход в личный кабинет</h1>
+<h2>Вход</h2>
 
-<form method="post" action="/login">
+% if error:
+<p style="color:red">{{error}}</p>
+% end
 
-    <p>
-        <label>Логин</label><br>
-        <input type="text" name="login">
-    </p>
-
-    <p>
-        <label>Пароль</label><br>
-        <input type="password" name="password">
-    </p>
-
-    <p>
-        <button type="submit">Войти</button>
-    </p>
-
+<form action="/login" method="post">
+    <input name="login" placeholder="Логин"><br><br>
+    <input name="password" type="password" placeholder="Пароль"><br><br>
+    <button type="submit">Войти</button>
 </form>
 
-% if defined('error') and error:
-    <p style="color:red;">
-        {{error}}
-    </p>
-% end
+</body>
+</html>

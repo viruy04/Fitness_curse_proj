@@ -1,81 +1,113 @@
+from bottle import route, template, request
 from bottle import route, view, request
 from datetime import datetime
 from db import get_connection
-from bottle import route, view, request, template
+import psycopg2.extras
 
 
-# Главная страница = логин
+# =========================
+# LOGIN PAGE
+# =========================
 @route('/')
+@route('/login')
 @view('login')
-def home():
-
-    return dict(
-        error="",
-        year=datetime.now().year
-    )
+def login_page():
+    return dict(title='Вход', error='')
 
 
-# Проверка входа
+# =========================
+# LOGIN CHECK
+# =========================
 @route('/login', method='POST')
-@view('cabinet')
+@view('client')
 def login_check():
 
     login = request.forms.get('login')
     password = request.forms.get('password')
 
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT *
-        FROM fitness_postgres.users
-        WHERE login = %s
-        AND password = %s
+        SELECT id, role, id_клиента
+        FROM fitness_postgres."юзеры"
+        WHERE login=%s AND password=%s
     """, (login, password))
 
     user = cur.fetchone()
 
-    print(user)
-
-    if user:
-
-        client_id = user[3]
-
-        cur.execute("""
-            SELECT
-                "Фамилия",
-                "Имя",
-                "Отчество",
-                "Телефон",
-                "Электронная_почта"
-            FROM fitness_postgres."клиенты"
-            WHERE "ID_клиента" = %s
-        """, (client_id,))
-
-        client = cur.fetchone()
-
+    if not user:
         cur.close()
         conn.close()
+        return dict(title='Вход', error='Неверный логин или пароль')
 
-        return dict(
-            client=client,
-            year=datetime.now().year
-        )
+    client_id = user['id_клиента']
+
+    cur.execute("""
+        SELECT "ID_клиента",
+               "Фамилия",
+               "Имя",
+               "Отчество",
+               "Телефон",
+               "Электронная_почта"
+        FROM fitness_postgres."клиенты"
+        WHERE "ID_клиента"=%s
+    """, (client_id,))
+
+    client = cur.fetchone()
 
     cur.close()
     conn.close()
 
     return dict(
-        error="Неверный логин или пароль",
-        year=datetime.now().year
+        title='ЛК клиента',
+        client=client
     )
 
-# Личный кабинет
-@route('/cabinet')
-@view('cabinet')
-def cabinet():
+
+# =========================
+# UPDATE CLIENT (БЕЗ REDIRECT)
+# =========================
+@route('/client/update', method='POST')
+@view('client')
+def update_client():
+
+    client_id = request.forms.get('id')
+    phone = request.forms.get('phone')
+    email = request.forms.get('email')
+
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # обновление
+    cur.execute("""
+        UPDATE fitness_postgres."клиенты"
+        SET "Телефон"=%s,
+            "Электронная_почта"=%s
+        WHERE "ID_клиента"=%s
+    """, (phone, email, client_id))
+
+    conn.commit()
+
+    # заново получаем данные (ВАЖНО — как в твоём стиле JSON-подхода)
+    cur.execute("""
+        SELECT "ID_клиента",
+               "Фамилия",
+               "Имя",
+               "Отчество",
+               "Телефон",
+               "Электронная_почта"
+        FROM fitness_postgres."клиенты"
+        WHERE "ID_клиента"=%s
+    """, (client_id,))
+
+    client = cur.fetchone()
+
+    cur.close()
+    conn.close()
 
     return dict(
-        client=None,
-        year=datetime.now().year
+        title='ЛК клиента',
+        client=client,
+        success='Данные обновлены'
     )
