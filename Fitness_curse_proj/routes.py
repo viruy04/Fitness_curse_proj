@@ -181,3 +181,28 @@ def my_subscriptions(client_id):
         title="Мои абонементы",
         subs=subs
     )
+
+@route('/schedule/<client_id:int>')
+@view('schedule')
+def schedule(client_id):
+
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT *
+        FROM fitness_postgres.тренировки_для_клиента
+        WHERE "Дата_и_время_начала" >= NOW()
+        ORDER BY "Дата_и_время_начала"
+    """)
+
+    schedule = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return dict(
+        title='Расписание тренировок',
+        schedule=schedule,
+        client_id=client_id
+    )

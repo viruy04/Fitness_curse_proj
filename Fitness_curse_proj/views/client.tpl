@@ -94,6 +94,12 @@
 
             <button type="submit">Сохранить</button>
 
+            <a href="/schedule/{{client['ID_клиента']}}">
+                <button type="button">
+                    Расписание тренировок
+                </button>
+            </a>
+
         </form>
 
         % end
