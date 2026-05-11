@@ -4,10 +4,17 @@
     <title>{{title}}</title>
 
     <style>
+
         body {
             font-family: Arial;
             background: #eef2f7;
             padding: 30px;
+        }
+
+        .wrapper {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
         }
 
         .card {
@@ -40,44 +47,89 @@
             color: green;
             margin-bottom: 10px;
         }
+
+        .sub {
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            background: #fafafa;
+        }
+
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="wrapper">
 
-    <h2>Личный кабинет</h2>
+    <!-- Личная информация -->
+    <div class="card">
 
-    % if defined('success'):
-        <div class="msg">{{success}}</div>
-    % end
+        <h2>Личный кабинет</h2>
 
-    % if client:
+        % if defined('success'):
+            <div class="msg">{{success}}</div>
+        % end
 
-    <form action="/client/update" method="post">
+        % if client:
 
-        <input type="hidden" name="id" value="{{client['ID_клиента']}}">
+        <form action="/client/update" method="post">
 
-        <label>Фамилия</label>
-        <input value="{{client['Фамилия']}}" disabled>
+            <input type="hidden" name="id" value="{{client['ID_клиента']}}">
 
-        <label>Имя</label>
-        <input value="{{client['Имя']}}" disabled>
+            <label>Фамилия</label>
+            <input value="{{client['Фамилия']}}" disabled>
 
-        <label>Отчество</label>
-        <input value="{{client['Отчество']}}" disabled>
+            <label>Имя</label>
+            <input value="{{client['Имя']}}" disabled>
 
-        <label>Телефон</label>
-        <input name="phone" value="{{client['Телефон']}}">
+            <label>Отчество</label>
+            <input value="{{client['Отчество']}}" disabled>
 
-        <label>Email</label>
-        <input name="email" value="{{client['Электронная_почта']}}">
+            <label>Телефон</label>
+            <input name="phone" value="{{client['Телефон']}}">
 
-        <button type="submit">Сохранить</button>
+            <label>Email</label>
+            <input name="email" value="{{client['Электронная_почта']}}">
 
-    </form>
+            <button type="submit">Сохранить</button>
 
-    % end
+        </form>
+
+        % end
+
+    </div>
+
+    <!-- Абонементы -->
+    <div class="card">
+
+        <h2>Мои абонементы</h2>
+
+        % if subscriptions:
+
+            % for sub in subscriptions:
+
+                <div class="sub">
+
+                    <b>Тип:</b> {{sub['Тип']}}<br><br>
+
+                    <b>Цена:</b> {{sub['Цена']}} ₽<br><br>
+
+                    <b>Срок:</b> {{sub['Срок_дней']}} дней<br><br>
+
+                    <b>Дата активации:</b> {{sub['Дата_активации']}}
+
+                </div>
+
+            % end
+
+        % else:
+
+            <p>Абонементов нет</p>
+
+        % end
+
+    </div>
 
 </div>
 

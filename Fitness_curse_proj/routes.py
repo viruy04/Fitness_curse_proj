@@ -56,12 +56,31 @@ def login_check():
 
     client = cur.fetchone()
 
+    # абонементы клиента
+    cur.execute("""
+    SELECT
+        ак."ID_абонемента",
+        та."Название" AS "Тип",
+        та."Цена",
+        та."Срок_дней",
+        ак."Дата_активации"
+    FROM fitness_postgres."абонементы_клиентов" ак
+    JOIN fitness_postgres."типы_абонементов" та
+        ON ак."ID_типа_абонемента" = та."ID_типа_абонемента"
+    JOIN fitness_postgres."договоры" д
+        ON ак."ID_договора" = д."ID_договора"
+    WHERE д."ID_клиента" = %s
+    """, (client_id,))
+
+    subscriptions = cur.fetchall()
+
     cur.close()
     conn.close()
 
     return dict(
-        title='ЛК клиента',
-        client=client
+    title='ЛК клиента',
+    client=client,
+    subscriptions=subscriptions
     )
 
 
@@ -103,11 +122,62 @@ def update_client():
 
     client = cur.fetchone()
 
+    # абонементы клиента
+    cur.execute("""
+    SELECT *
+    FROM fitness_postgres.мои_абонементы
+    WHERE "ID_абонемента" IN (
+
+        SELECT "ID_абонемента"
+        FROM fitness_postgres."абонементы_клиентов"
+        WHERE "ID_договора" IN (
+
+            SELECT "ID_договора"
+            FROM fitness_postgres."договоры"
+            WHERE "ID_клиента" = %s
+            )
+    )
+""", (client_id,))
+
+    subscriptions = cur.fetchall()
+
     cur.close()
     conn.close()
 
     return dict(
         title='ЛК клиента',
         client=client,
+        subscriptions=subscriptions,
         success='Данные обновлены'
+    )
+
+@route('/client/<client_id:int>/subscriptions')
+@view('subscriptions')
+def my_subscriptions(client_id):
+
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT *
+        FROM fitness_postgres.мои_абонементы
+        WHERE "ID_абонемента" IN (
+            SELECT "ID_абонемента"
+            FROM fitness_postgres."абонементы_клиентов"
+            WHERE "ID_договора" IN (
+                SELECT "ID_договора"
+                FROM fitness_postgres."договоры"
+                WHERE "ID_клиента" = %s
+            )
+        )
+    """, (client_id,))
+
+    subs = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return dict(
+        title="Мои абонементы",
+        subs=subs
     )
