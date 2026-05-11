@@ -196,7 +196,29 @@ def schedule(client_id):
         ORDER BY "Дата_и_время_начала"
     """)
 
-    schedule = cur.fetchall()
+    rows = cur.fetchall()
+
+    schedule = []
+
+    for r in rows:
+
+        dt = r["Дата_и_время_начала"]
+        dur = r["Длительность"]
+        hours = dur.hour
+        minutes = dur.minute
+
+        schedule.append({
+            "ID_занятия": r["ID_занятия"],
+            "Тип_тренировки": r["Тип_тренировки"],
+            "Уровень_сложности": r["Уровень_сложности"],
+            "Базовая_стоимость": r["Базовая_стоимость"],
+            "Длительность": f"{hours}ч {minutes}мин",
+            "Дата": dt.strftime("%d.%m.%Y"),
+            "Время": dt.strftime("%H:%M"),
+            "Количество_мест": r["Количество_мест"],
+            "Тип_зала": r["Тип_зала"],
+            "Филиал": r["Филиал"]
+        })
 
     cur.close()
     conn.close()
