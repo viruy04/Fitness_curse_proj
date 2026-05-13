@@ -94,11 +94,19 @@
 
             <button type="submit">Сохранить</button>
 
-            <a href="/schedule/{{client['ID_клиента']}}">
-                <button type="button">
-                    Расписание тренировок
+            % if has_active_subscription:
+                <a href="/schedule/{{client['ID_клиента']}}">
+                    <button type="button">
+                        Расписание тренировок
+                    </button>
+                </a>
+            % else:
+                <button type="button" disabled style="background: gray; cursor: not-allowed;">
+                    Расписание тренировок (недоступно)
                 </button>
-            </a>
+            % end
+
+
 
         </form>
 
@@ -107,35 +115,40 @@
     </div>
 
     <!-- Абонементы -->
-    <div class="card">
+<div class="card">
 
-        <h2>Мои абонементы</h2>
+    <h2>Мои абонементы</h2>
 
-        % if subscriptions:
+    % if subscriptions:
 
-            % for sub in subscriptions:
+        % for sub in subscriptions:
 
-                <div class="sub">
+            <div class="sub">
 
-                    <b>Тип:</b> {{sub['Тип']}}<br><br>
+                <b>Тип:</b> {{sub['Тип']}}<br><br>
+                <b>Цена:</b> {{sub['Цена']}} ₽<br><br>
+                <b>Срок:</b> {{sub['Срок_дней']}} дней<br><br>
+                <b>Дата активации:</b> {{sub['Дата_активации']}}<br><br>
 
-                    <b>Цена:</b> {{sub['Цена']}} ₽<br><br>
+                % if sub['is_expired']:
+                    <span style="color:red;">Статус: истёк</span>
+                % elif sub['is_active']:
+                    <span style="color:green;">Статус: активен</span>
+                % else:
+                    <span style="color:gray;">Статус: не активирован</span>
+                % end
 
-                    <b>Срок:</b> {{sub['Срок_дней']}} дней<br><br>
-
-                    <b>Дата активации:</b> {{sub['Дата_активации']}}
-
-                </div>
-
-            % end
-
-        % else:
-
-            <p>Абонементов нет</p>
+            </div>
 
         % end
 
-    </div>
+    % else:
+
+        <p>Абонементов нет</p>
+
+    % end
+
+</div>
 
 </div>
 

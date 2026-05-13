@@ -1,4 +1,3 @@
-from bottle import route, template, request
 from bottle import route, view, request
 from datetime import datetime
 from db import get_connection
@@ -41,35 +40,50 @@ def login_check():
         conn.close()
         return dict(title='Вход', error='Неверный логин или пароль')
 
-    client_id = user['id_клиента']
+    return load_client_page(user['id_клиента'])
 
+
+# =========================
+# CLIENT PAGE
+# =========================
+@route('/client/<client_id:int>')
+@view('client')
+def client_page(client_id):
+    return load_client_page(client_id)
+
+
+# =========================
+# COMMON CLIENT LOADER
+# =========================
+def load_client_page(client_id):
+
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # клиент
     cur.execute("""
-        SELECT "ID_клиента",
-               "Фамилия",
-               "Имя",
-               "Отчество",
-               "Телефон",
-               "Электронная_почта"
+        SELECT "ID_клиента","Фамилия","Имя","Отчество","Телефон","Электронная_почта"
         FROM fitness_postgres."клиенты"
         WHERE "ID_клиента"=%s
     """, (client_id,))
-
     client = cur.fetchone()
 
-    # абонементы клиента
+    # абонементы
     cur.execute("""
-    SELECT
-        ак."ID_абонемента",
-        та."Название" AS "Тип",
-        та."Цена",
-        та."Срок_дней",
-        ак."Дата_активации"
-    FROM fitness_postgres."абонементы_клиентов" ак
-    JOIN fitness_postgres."типы_абонементов" та
-        ON ак."ID_типа_абонемента" = та."ID_типа_абонемента"
-    JOIN fitness_postgres."договоры" д
-        ON ак."ID_договора" = д."ID_договора"
-    WHERE д."ID_клиента" = %s
+        SELECT
+            ак."ID_абонемента",
+            та."Название" AS "Тип",
+            та."Цена",
+            та."Срок_дней",
+            ак."Дата_активации",
+            (ак."Дата_активации" IS NOT NULL) AS is_active,
+            (ак."Дата_активации" + INTERVAL '1 day' * та."Срок_дней") < NOW() AS is_expired
+        FROM fitness_postgres."абонементы_клиентов" ак
+        JOIN fitness_postgres."типы_абонементов" та
+            ON ак."ID_типа_абонемента" = та."ID_типа_абонемента"
+        JOIN fitness_postgres."договоры" д
+            ON ак."ID_договора" = д."ID_договора"
+        WHERE д."ID_клиента" = %s
     """, (client_id,))
 
     subscriptions = cur.fetchall()
@@ -78,14 +92,18 @@ def login_check():
     conn.close()
 
     return dict(
-    title='ЛК клиента',
-    client=client,
-    subscriptions=subscriptions
+        title='ЛК клиента',
+        client=client,
+        subscriptions=subscriptions,
+        has_active_subscription=any(
+            s['is_active'] and not s['is_expired']
+            for s in subscriptions
+        )
     )
 
 
 # =========================
-# UPDATE CLIENT (БЕЗ REDIRECT)
+# UPDATE CLIENT
 # =========================
 @route('/client/update', method='POST')
 @view('client')
@@ -98,7 +116,6 @@ def update_client():
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # обновление
     cur.execute("""
         UPDATE fitness_postgres."клиенты"
         SET "Телефон"=%s,
@@ -107,50 +124,15 @@ def update_client():
     """, (phone, email, client_id))
 
     conn.commit()
-
-    # заново получаем данные (ВАЖНО — как в твоём стиле JSON-подхода)
-    cur.execute("""
-        SELECT "ID_клиента",
-               "Фамилия",
-               "Имя",
-               "Отчество",
-               "Телефон",
-               "Электронная_почта"
-        FROM fitness_postgres."клиенты"
-        WHERE "ID_клиента"=%s
-    """, (client_id,))
-
-    client = cur.fetchone()
-
-    # абонементы клиента
-    cur.execute("""
-    SELECT *
-    FROM fitness_postgres.мои_абонементы
-    WHERE "ID_абонемента" IN (
-
-        SELECT "ID_абонемента"
-        FROM fitness_postgres."абонементы_клиентов"
-        WHERE "ID_договора" IN (
-
-            SELECT "ID_договора"
-            FROM fitness_postgres."договоры"
-            WHERE "ID_клиента" = %s
-            )
-    )
-""", (client_id,))
-
-    subscriptions = cur.fetchall()
-
     cur.close()
     conn.close()
 
-    return dict(
-        title='ЛК клиента',
-        client=client,
-        subscriptions=subscriptions,
-        success='Данные обновлены'
-    )
+    return load_client_page(client_id)
 
+
+# =========================
+# SUBSCRIPTIONS PAGE
+# =========================
 @route('/client/<client_id:int>/subscriptions')
 @view('subscriptions')
 def my_subscriptions(client_id):
@@ -182,6 +164,10 @@ def my_subscriptions(client_id):
         subs=subs
     )
 
+
+# =========================
+# SCHEDULE
+# =========================
 @route('/schedule/<client_id:int>')
 @view('schedule')
 def schedule(client_id):
@@ -189,7 +175,6 @@ def schedule(client_id):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # 1. тренировки
     cur.execute("""
         SELECT *
         FROM fitness_postgres.тренировки_для_клиента
@@ -198,7 +183,6 @@ def schedule(client_id):
     """)
     rows = cur.fetchall()
 
-    # 2. абонементы клиента
     cur.execute("""
         SELECT ак."ID_абонемента"
         FROM fitness_postgres."абонементы_клиентов" ак
@@ -210,22 +194,20 @@ def schedule(client_id):
     subs = cur.fetchall()
     sub_ids = [s["ID_абонемента"] for s in subs]
 
-    # 3. посещения клиента
+    visit_map = {}
+
     if sub_ids:
         cur.execute("""
-            SELECT "ID_занятия", "ID_абонемента", "ID_статуса"
+            SELECT "ID_занятия","ID_абонемента","ID_статуса"
             FROM fitness_postgres."посещения_групповых"
             WHERE "ID_абонемента" = ANY(%s)
         """, (sub_ids,))
         visits = cur.fetchall()
-    else:
-        visits = []
 
-    # карта (занятие, абонемент) -> статус
-    visit_map = {
-        (v["ID_занятия"], v["ID_абонемента"]): v["ID_статуса"]
-        for v in visits
-    }
+        visit_map = {
+            (v["ID_занятия"], v["ID_абонемента"]): v["ID_статуса"]
+            for v in visits
+        }
 
     schedule_list = []
 
@@ -234,29 +216,22 @@ def schedule(client_id):
         dt = r["Дата_и_время_начала"]
         dur = r["Длительность"]
 
-        # проверка регистрации (1 = записан)
-        is_registered = False
-
-        for sub in sub_ids:
-            if (r["ID_занятия"], sub) in visit_map and visit_map[(r["ID_занятия"], sub)] == 1:
-                is_registered = True
-                break
+        is_registered = any(
+            (r["ID_занятия"], sub) in visit_map and visit_map[(r["ID_занятия"], sub)] == 1
+            for sub in sub_ids
+        )
 
         schedule_list.append({
             "ID_занятия": r["ID_занятия"],
             "Тип_тренировки": r["Тип_тренировки"],
             "Уровень_сложности": r["Уровень_сложности"],
             "Базовая_стоимость": r["Базовая_стоимость"],
-
             "Длительность": f"{dur.hour}ч {dur.minute}м",
-
             "Дата": dt.strftime("%d.%m.%Y"),
             "Время": dt.strftime("%H:%M"),
-
             "Количество_мест": r["Количество_мест"],
             "Тип_зала": r["Тип_зала"],
             "Филиал": r["Филиал"],
-
             "is_registered": is_registered
         })
 
@@ -267,55 +242,73 @@ def schedule(client_id):
         title='Расписание тренировок',
         schedule=schedule_list,
         client_id=client_id,
-        sub_ids=sub_ids
+        sub_ids=sub_ids,
+        success='',
+        error=''
     )
 
+
+# =========================
+# SIGNUP
+# =========================
 @route('/group-training/signup', method='POST')
+@view('schedule')
 def signup():
 
     training_id = request.forms.get('training_id')
     subscription_id = request.forms.get('subscription_id')
+    client_id = request.forms.get('client_id')
 
     conn = get_connection()
     cur = conn.cursor()
 
     try:
         cur.execute("""
-            CALL fitness_postgres."записаться_на_групповую"(%s, %s)
+            CALL fitness_postgres."записаться_на_групповую"(%s,%s)
         """, (training_id, subscription_id))
-
         conn.commit()
+        success = "Вы успешно записались"
+        error = ""
 
     except Exception as e:
         conn.rollback()
-        print(e)
+        success = ""
+        error = str(e)
 
     cur.close()
     conn.close()
 
-    return "OK"
+    return schedule(client_id)
 
+
+# =========================
+# CANCEL
+# =========================
 @route('/group-training/cancel', method='POST')
+@view('schedule')
 def cancel():
 
     training_id = request.forms.get('training_id')
     subscription_id = request.forms.get('subscription_id')
+    client_id = request.forms.get('client_id')
 
     conn = get_connection()
     cur = conn.cursor()
 
     try:
         cur.execute("""
-            CALL fitness_postgres."отменить_запись_на_групповую"(%s, %s)
+            CALL fitness_postgres."отменить_запись_на_групповую"(%s,%s)
         """, (training_id, subscription_id))
-
         conn.commit()
+        success = "Запись отменена"
+        error = ""
 
     except Exception as e:
         conn.rollback()
-        print(e)
+        success = ""
+        error = str(e)
 
     cur.close()
     conn.close()
 
-    return "OK"
+    return schedule(client_id)

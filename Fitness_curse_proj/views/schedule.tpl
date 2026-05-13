@@ -1,3 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{title}}</title>
+
+    <style>
+
+        body{
+            font-family: Arial;
+            background:#eef2f7;
+            padding:30px;
+        }
+
+        .card{
+            background:white;
+            padding:20px;
+            border-radius:12px;
+            margin-bottom:20px;
+            box-shadow:0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn{
+            padding:10px 15px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            color:white;
+            font-size:15px;
+        }
+
+        .green{
+            background:#4CAF50;
+        }
+
+        .red{
+            background:#e74c3c;
+        }
+
+        .btn:disabled{
+            background:#999;
+            cursor:not-allowed;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<a href="/client/{{client_id}}">Назад</a>
+
+<h1>Расписание тренировок</h1>
+
+% if success:
+
+<div style="
+    background:#d4edda;
+    color:#155724;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:20px;
+">
+    {{success}}
+</div>
+
+% end
+
+% if error:
+
+<div style="
+    background:#f8d7da;
+    color:#721c24;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:20px;
+">
+    {{error}}
+</div>
+
+% end
+
+
 % for s in schedule:
 
 <div class="card">
@@ -13,43 +94,66 @@
     <b>Зал:</b> {{s['Тип_зала']}}<br><br>
     <b>Филиал:</b> {{s['Филиал']}}<br><br>
 
-    <!-- выбор абонемента -->
-    <form action="/group-training/signup" method="post">
+
+    <!-- ЗАПИСАТЬСЯ -->
+
+    <form action="/group-training/signup" method="post" style="display:inline;">
 
         <input type="hidden" name="training_id" value="{{s['ID_занятия']}}">
+        <input type="hidden" name="client_id" value="{{client_id}}">
+        <input type="hidden" name="subscription_id" value="{{sub_ids[0]}}">
 
-        <select name="subscription_id">
+        % if not s['is_registered']:
 
-            % for sub in sub_ids:
-                <option value="{{sub}}">{{sub}}</option>
-            % end
+            <button
+                class="btn green"
+                type="submit"
+                onclick="return confirm('Записаться на тренировку?')"
+            >
+                Записаться
+            </button>
 
-        </select>
-
-       % if not s['is_registered']:
-            <button type="submit">Записаться</button>
         % else:
-            <button disabled>Записаться</button>
+
+            <button
+                class="btn green"
+                disabled
+            >
+                Записаться
+            </button>
+
         % end
 
     </form>
 
-    <form action="/group-training/cancel" method="post">
+
+    <!-- ОТМЕНИТЬ -->
+
+    <form action="/group-training/cancel" method="post" style="display:inline;">
 
         <input type="hidden" name="training_id" value="{{s['ID_занятия']}}">
-
-        <select name="subscription_id">
-
-            % for sub in sub_ids:
-                <option value="{{sub}}">{{sub}}</option>
-            % end
-
-        </select>
+        <input type="hidden" name="client_id" value="{{client_id}}">
+        <input type="hidden" name="subscription_id" value="{{sub_ids[0]}}">
 
         % if s['is_registered']:
-            <button type="submit">Отменить</button>
+
+            <button
+                class="btn red"
+                type="submit"
+                onclick="return confirm('Отменить запись?')"
+            >
+                Отменить
+            </button>
+
         % else:
-            <button disabled>Отменить</button>
+
+            <button
+                class="btn red"
+                disabled
+            >
+                Отменить
+            </button>
+
         % end
 
     </form>
@@ -57,3 +161,6 @@
 </div>
 
 % end
+
+</body>
+</html>
