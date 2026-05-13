@@ -1,28 +1,22 @@
-from bottle import route, view, request
+from bottle import route, view, request, template
 from datetime import datetime
 from db import get_connection
 import psycopg2.extras
 
-
-# =========================
-# LOGIN PAGE
-# =========================
 @route('/')
 @route('/login')
 @view('login')
 def login_page():
     return dict(title='Вход', error='')
 
-
-# =========================
-# LOGIN CHECK
-# =========================
 @route('/login', method='POST')
-@view('client')
 def login_check():
+    login = request.forms.get('login', '').strip()
+    password = request.forms.get('password', '').strip()
 
-    login = request.forms.get('login')
-    password = request.forms.get('password')
+    # Проверка на пустые поля
+    if not login or not password:
+        return template('login', title='Вход', error='Пожалуйста, заполните все поля')
 
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -34,27 +28,24 @@ def login_check():
     """, (login, password))
 
     user = cur.fetchone()
+    cur.close()
+    conn.close()
 
+    # Проверка: пользователь не найден в БД
     if not user:
-        cur.close()
-        conn.close()
-        return dict(title='Вход', error='Неверный логин или пароль')
+        return template('login', title='Вход', error='Неверный логин или пароль')
 
-    return load_client_page(user['id_клиента'])
+    #Успешный вход 
+    client_data = load_client_page(user['id_клиента'])
+    return template('client', **client_data)
 
-
-# =========================
-# CLIENT PAGE
-# =========================
+# ЛК
 @route('/client/<client_id:int>')
 @view('client')
 def client_page(client_id):
     return load_client_page(client_id)
 
 
-# =========================
-# COMMON CLIENT LOADER
-# =========================
 def load_client_page(client_id):
 
     conn = get_connection()
@@ -102,9 +93,7 @@ def load_client_page(client_id):
     )
 
 
-# =========================
-# UPDATE CLIENT
-# =========================
+# Обновление клиента
 @route('/client/update', method='POST')
 @view('client')
 def update_client():
@@ -130,9 +119,7 @@ def update_client():
     return load_client_page(client_id)
 
 
-# =========================
-# SUBSCRIPTIONS PAGE
-# =========================
+# Абонементы
 @route('/client/<client_id:int>/subscriptions')
 @view('subscriptions')
 def my_subscriptions(client_id):
@@ -165,9 +152,7 @@ def my_subscriptions(client_id):
     )
 
 
-# =========================
-# SCHEDULE
-# =========================
+# Расписание групповых тренировок
 @route('/schedule/<client_id:int>')
 @view('schedule')
 def schedule(client_id):
@@ -248,9 +233,7 @@ def schedule(client_id):
     )
 
 
-# =========================
-# SIGNUP
-# =========================
+# Запись
 @route('/group-training/signup', method='POST')
 @view('schedule')
 def signup():
@@ -281,9 +264,7 @@ def signup():
     return schedule(client_id)
 
 
-# =========================
-# CANCEL
-# =========================
+# Отмена записи
 @route('/group-training/cancel', method='POST')
 @view('schedule')
 def cancel():

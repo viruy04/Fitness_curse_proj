@@ -19,7 +19,7 @@ body {
 /* лого картинкой */
 .logo {
     position: absolute;
-    top: -10px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
@@ -51,11 +51,6 @@ body {
     gap: 22px;
     transition: 0.25s ease;
 }
-
-    .login-box:hover {
-        transform: translate(-50%, -52%);
-        box-shadow: 0 14px 55px rgba(0,0,0,0.55);
-    }
 
 /* заголовок */
 .login-header {
@@ -119,7 +114,12 @@ button {
 
 /* ошибка */
 .error {
-    color: #ff6b6b;
+    color: #d32f2f;
+    background: #ffebee;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid #ffcdd2;
+    font-size: 18px;
     text-align: center;
-    font-size: 15px;
 }

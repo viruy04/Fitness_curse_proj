@@ -15,7 +15,7 @@
 
     <div class="login-header">Войти в систему</div>
 
-    % if error:
+    % if defined('error') and error:
         <div class="error">{{error}}</div>
     % end
 
