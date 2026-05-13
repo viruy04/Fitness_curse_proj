@@ -189,35 +189,75 @@ def schedule(client_id):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+    # 1. тренировки
     cur.execute("""
         SELECT *
         FROM fitness_postgres.тренировки_для_клиента
         WHERE "Дата_и_время_начала" >= NOW()
         ORDER BY "Дата_и_время_начала"
     """)
-
     rows = cur.fetchall()
 
-    schedule = []
+    # 2. абонементы клиента
+    cur.execute("""
+        SELECT ак."ID_абонемента"
+        FROM fitness_postgres."абонементы_клиентов" ак
+        JOIN fitness_postgres."договоры" д
+            ON ак."ID_договора" = д."ID_договора"
+        WHERE д."ID_клиента" = %s
+    """, (client_id,))
+
+    subs = cur.fetchall()
+    sub_ids = [s["ID_абонемента"] for s in subs]
+
+    # 3. посещения клиента
+    if sub_ids:
+        cur.execute("""
+            SELECT "ID_занятия", "ID_абонемента", "ID_статуса"
+            FROM fitness_postgres."посещения_групповых"
+            WHERE "ID_абонемента" = ANY(%s)
+        """, (sub_ids,))
+        visits = cur.fetchall()
+    else:
+        visits = []
+
+    # карта (занятие, абонемент) -> статус
+    visit_map = {
+        (v["ID_занятия"], v["ID_абонемента"]): v["ID_статуса"]
+        for v in visits
+    }
+
+    schedule_list = []
 
     for r in rows:
 
         dt = r["Дата_и_время_начала"]
         dur = r["Длительность"]
-        hours = dur.hour
-        minutes = dur.minute
 
-        schedule.append({
+        # проверка регистрации (1 = записан)
+        is_registered = False
+
+        for sub in sub_ids:
+            if (r["ID_занятия"], sub) in visit_map and visit_map[(r["ID_занятия"], sub)] == 1:
+                is_registered = True
+                break
+
+        schedule_list.append({
             "ID_занятия": r["ID_занятия"],
             "Тип_тренировки": r["Тип_тренировки"],
             "Уровень_сложности": r["Уровень_сложности"],
             "Базовая_стоимость": r["Базовая_стоимость"],
-            "Длительность": f"{hours}ч {minutes}мин",
+
+            "Длительность": f"{dur.hour}ч {dur.minute}м",
+
             "Дата": dt.strftime("%d.%m.%Y"),
             "Время": dt.strftime("%H:%M"),
+
             "Количество_мест": r["Количество_мест"],
             "Тип_зала": r["Тип_зала"],
-            "Филиал": r["Филиал"]
+            "Филиал": r["Филиал"],
+
+            "is_registered": is_registered
         })
 
     cur.close()
@@ -225,6 +265,57 @@ def schedule(client_id):
 
     return dict(
         title='Расписание тренировок',
-        schedule=schedule,
-        client_id=client_id
+        schedule=schedule_list,
+        client_id=client_id,
+        sub_ids=sub_ids
     )
+
+@route('/group-training/signup', method='POST')
+def signup():
+
+    training_id = request.forms.get('training_id')
+    subscription_id = request.forms.get('subscription_id')
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            CALL fitness_postgres."записаться_на_групповую"(%s, %s)
+        """, (training_id, subscription_id))
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        print(e)
+
+    cur.close()
+    conn.close()
+
+    return "OK"
+
+@route('/group-training/cancel', method='POST')
+def cancel():
+
+    training_id = request.forms.get('training_id')
+    subscription_id = request.forms.get('subscription_id')
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            CALL fitness_postgres."отменить_запись_на_групповую"(%s, %s)
+        """, (training_id, subscription_id))
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        print(e)
+
+    cur.close()
+    conn.close()
+
+    return "OK"

@@ -1,65 +1,59 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{title}}</title>
+% for s in schedule:
 
-    <style>
-        body{
-            font-family: Arial;
-            background:#eef2f7;
-            padding:30px;
-        }
+<div class="card">
 
-        .card{
-            background:white;
-            padding:20px;
-            border-radius:12px;
-            margin-bottom:20px;
-            box-shadow:0 5px 15px rgba(0,0,0,0.1);
-        }
+    <h2>{{s['Тип_тренировки']}}</h2>
 
-        .btn{
-            display:inline-block;
-            padding:10px 15px;
-            background:#4CAF50;
-            color:white;
-            text-decoration:none;
-            border-radius:8px;
-            margin-bottom:20px;
-        }
-    </style>
-</head>
+    <b>Уровень:</b> {{s['Уровень_сложности']}}<br><br>
+    <b>Стоимость:</b> {{s['Базовая_стоимость']}} ₽<br><br>
+    <b>Дата:</b> {{s['Дата']}}<br><br>
+    <b>Время:</b> {{s['Время']}}<br><br>
+    <b>Длительность:</b> {{s['Длительность']}}<br><br>
+    <b>Мест:</b> {{s['Количество_мест']}}<br><br>
+    <b>Зал:</b> {{s['Тип_зала']}}<br><br>
+    <b>Филиал:</b> {{s['Филиал']}}<br><br>
 
-<body>
+    <!-- выбор абонемента -->
+    <form action="/group-training/signup" method="post">
 
-<a href="/client/{{client_id}}" class="btn">Назад</a>
+        <input type="hidden" name="training_id" value="{{s['ID_занятия']}}">
 
-<h1>Расписание тренировок</h1>
+        <select name="subscription_id">
 
-% if schedule:
+            % for sub in sub_ids:
+                <option value="{{sub}}">{{sub}}</option>
+            % end
 
-    % for s in schedule:
+        </select>
 
-        <div class="card">
+       % if not s['is_registered']:
+            <button type="submit">Записаться</button>
+        % else:
+            <button disabled>Записаться</button>
+        % end
 
-            <h2>{{s['Тип_тренировки']}}</h2>
+    </form>
 
-            <b>Уровень:</b> {{s['Уровень_сложности']}}<br><br>
-            <b>Стоимость:</b> {{s['Базовая_стоимость']}} ₽<br><br>
-            <b>Дата:</b> {{s['Дата']}}<br><br>
-            <b>Время:</b> {{s['Время']}}<br><br>
-            <b>Длительность:</b> {{s['Длительность']}}<br><br>
-            <b>Мест:</b> {{s['Количество_мест']}}<br><br>
-            <b>Зал:</b> {{s['Тип_зала']}}<br><br>
-            <b>Филиал:</b> {{s['Филиал']}}
+    <form action="/group-training/cancel" method="post">
 
-        </div>
+        <input type="hidden" name="training_id" value="{{s['ID_занятия']}}">
 
-    % end
+        <select name="subscription_id">
 
-% else:
-    <p>Тренировок нет</p>
+            % for sub in sub_ids:
+                <option value="{{sub}}">{{sub}}</option>
+            % end
+
+        </select>
+
+        % if s['is_registered']:
+            <button type="submit">Отменить</button>
+        % else:
+            <button disabled>Отменить</button>
+        % end
+
+    </form>
+
+</div>
+
 % end
-
-</body>
-</html>
