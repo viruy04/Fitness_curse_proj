@@ -1,21 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <title>Вход</title>
+    <link rel="stylesheet" href="/static/content/login.css">
 </head>
+
 <body>
 
-<h2>Вход</h2>
+<div class="logo">
+    <img src="/static/img/logo.jpg">
+</div>
 
-% if error:
-<p style="color:red">{{error}}</p>
-% end
+<div class="login-box">
 
-<form action="/login" method="post">
-    <input name="login" placeholder="Логин"><br><br>
-    <input name="password" type="password" placeholder="Пароль"><br><br>
-    <button type="submit">Войти</button>
-</form>
+    <div class="login-header">Войти в систему</div>
+
+    % if error:
+        <div class="error">{{error}}</div>
+    % end
+
+    <form action="/login" method="post">
+
+        <div class="field">
+            <label>Логин</label>
+            <input name="login" type="text">
+        </div>
+
+        <div class="field">
+            <label>Пароль</label>
+            <input name="password" type="password">
+        </div>
+
+        <button type="submit">Войти</button>
+
+    </form>
+
+</div>
 
 </body>
 </html>
