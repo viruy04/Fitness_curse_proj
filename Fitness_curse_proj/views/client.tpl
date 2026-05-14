@@ -23,7 +23,8 @@
             Личный кабинет
         </a>
 
-        <a href="/login">
+        <a href="/login"
+           onclick="return confirm('Вы уверены, что хотите выйти?')">
             Выход
         </a>
     </div>
