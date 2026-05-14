@@ -188,12 +188,27 @@ def schedule(client_id):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+    # сортировка по филиалу
+    cur.execute("""
+        SELECT "ID_филиала"
+        FROM fitness_postgres."клиенты"
+        WHERE "ID_клиента" = %s
+    """, (client_id,))
+    
+    client_branch = cur.fetchone()["ID_филиала"]
+
     cur.execute("""
         SELECT *
         FROM fitness_postgres.тренировки_для_клиента
         WHERE "Дата_и_время_начала" >= NOW()
+          AND "Филиал" = (
+              SELECT "Название"
+              FROM fitness_postgres."филиалы"
+              WHERE "ID_филиала" = %s
+          )
         ORDER BY "Дата_и_время_начала"
-    """)
+    """, (client_branch,))
+
     rows = cur.fetchall()
 
     cur.execute("""
