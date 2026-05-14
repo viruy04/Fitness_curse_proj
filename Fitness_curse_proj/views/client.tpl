@@ -68,11 +68,13 @@
                    value="{{form_email if defined('form_email') else client['Электронная_почта']}}" 
                    placeholder="example@mail.ru">
 
-            <button type="submit">Сохранить</button>
+            <button type="submit" class="button">
+                Сохранить
+            </button>   
 
             % if has_active_subscription:
                 <a href="/schedule/{{client['ID_клиента']}}" style="text-decoration: none; display: block;">
-                    <button type="button" style="background: #2196F3;">Расписание тренировок</button>
+                    <button type="button" style="background:#2563eb;">Расписание тренировок</button>
                 </a>
             % else:
                 <button type="button" disabled style="background: gray; cursor: not-allowed;">
