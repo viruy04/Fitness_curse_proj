@@ -3,76 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>{{title}}</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #eef2f7;
-            padding: 30px;
-        }
-        .wrapper {
-            display: flex;
-            gap: 30px;
-            align-items: flex-start;
-        }
-        .card {
-            width: 420px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        label {
-            display: block;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #555;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin: 4px 0 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-        .error {
-            color: #d32f2f;
-            background: #ffebee;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            border: 1px solid #ffcdd2;
-            font-size: 14px;
-        }
-        .msg {
-            color: #2e7d32;
-            background: #e8f5e9;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            border: 1px solid #c8e6c9;
-            font-size: 14px;
-        }
-        .sub {
-            border: 1px solid #ddd;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            background: #fafafa;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/content/client.css">
 </head>
 <body>
+<!-- Шапка -->
+<header class="topbar">
+
+    <div class="topbar-left">
+        <img src="/static/img/logo.png" alt="logo">
+    </div>
+
+    <div class="topbar-right">
+        <a href="/client/{{client['ID_клиента']}}/subscriptions">
+            Абонементы
+        </a>
+
+        <a href="/client/{{client['ID_клиента']}}">
+            Личный кабинет
+        </a>
+
+        <a href="/login">
+            Выход
+        </a>
+    </div>
+
+</header>
 
 <div class="wrapper">
 

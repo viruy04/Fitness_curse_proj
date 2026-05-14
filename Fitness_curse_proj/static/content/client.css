@@ -1,0 +1,233 @@
+body {
+    margin: 0;
+    padding: 40px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(rgba(8,12,20,0.78), rgba(8,12,20,0.88)), url("/static/img/gym.jpg") no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    color: white;
+}
+
+/* контейнер */
+.wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+/* карточки */
+.card {
+    width: 430px;
+    padding: 32px;
+    border-radius: 24px;
+    background: #111827;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.45);
+    transition: 0.25s ease;
+}
+
+    .card:hover {
+        transform: translateY(-4px);
+    }
+
+    /* заголовки */
+    .card h2 {
+        margin-top: 0;
+        margin-bottom: 28px;
+        font-size: 30px;
+        font-weight: 700;
+        color: white;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        padding-bottom: 14px;
+    }
+
+/* labels */
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #b8c1d1;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* inputs */
+input {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid #253047;
+    background: #1b2435;
+    color: white;
+    font-size: 16px;
+    outline: none;
+    transition: 0.2s ease;
+}
+
+    input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
+    }
+
+    /* disabled */
+    input:disabled {
+        background: #161d2b;
+        color: rgba(255,255,255,0.7);
+    }
+
+/* кнопки */
+button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: white;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+    margin-top: 10px;
+}
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(37,99,235,0.35);
+    }
+
+    /* disabled кнопка */
+    button:disabled {
+        background: #4b5563;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+/* сообщения */
+.error {
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.35);
+    color: #ff9b9b;
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.msg {
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.35);
+    color: #86efac;
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* абонементы */
+.sub {
+    background: #182132;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 18px;
+    line-height: 1.8;
+    transition: 0.2s ease;
+}
+
+    .sub:hover {
+        background: #1d2940;
+    }
+
+    /* текст внутри */
+    .sub b {
+        color: white;
+    }
+
+/* статусы */
+.status-active {
+    color: #4ade80;
+    font-weight: bold;
+}
+
+.status-expired {
+    color: #f87171;
+    font-weight: bold;
+}
+
+.status-inactive {
+    color: #9ca3af;
+    font-weight: bold;
+}
+
+/* адаптив */
+@media (max-width: 980px) {
+
+    body {
+        padding: 20px;
+    }
+
+    .wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 500px;
+    }
+}
+
+/* шапка */
+
+.topbar {
+    width: 100%;
+    height: 90px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    box-sizing: border-box;
+    background: rgba(10,15,25,0.78);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+
+/* логотип */
+.topbar-left img {
+    width: 180px;
+    height: auto;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+
+/* ссылки */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 34px;
+}
+
+    .topbar-right a {
+        color: rgba(255,255,255,0.88);
+        text-decoration: none;
+        font-size: 18px;
+        font-weight: 600;
+        transition: 0.2s ease;
+    }
+
+        .topbar-right a:hover {
+            color: #60a5fa;
+            transform: translateY(-1px);
+        }
+
+/* чтобы контент не залезал под шапку */
+.wrapper {
+    margin-top: 120px;
+}
