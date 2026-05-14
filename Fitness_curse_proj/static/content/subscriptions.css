@@ -1,0 +1,72 @@
+body {
+    margin: 0;
+    padding: 120px 40px 40px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(rgba(8,12,20,0.82), rgba(8,12,20,0.9)), url("/static/img/gym.jpg") no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    color: white;
+}
+
+/* заголовок */
+.page-title {
+    text-align: center;
+    font-size: 40px;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+/* контейнер */
+.subs-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+}
+
+/* карточка */
+.sub-card {
+    width: 340px;
+    padding: 28px;
+    border-radius: 24px;
+    background: #111827;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    transition: 0.25s ease;
+}
+
+    .sub-card:hover {
+        transform: translateY(-6px);
+    }
+
+/* название */
+.sub-name {
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+/* цена */
+.sub-price {
+    font-size: 35px;
+    font-weight: bold;
+    color: #60a5fa;
+    margin-bottom: 24px;
+}
+
+/* инфа */
+.sub-info {
+    margin-bottom: 12px;
+    font-size: 22px;
+    color: #d1d5db;
+}
+
+/* описание */
+.sub-description {
+    margin-top: 20px;
+    padding-top: 20px;
+    font-size: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: #9ca3af;
+    line-height: 1.6;
+}

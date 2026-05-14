@@ -10,6 +10,7 @@ body {
 
 /* контейнер */
 .wrapper {
+    margin-top:75px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -28,10 +29,6 @@ body {
     transition: 0.25s ease;
 }
 
-    .card:hover {
-        transform: translateY(-4px);
-    }
-
     /* заголовки */
     .card h2 {
         margin-top: 0;
@@ -43,16 +40,14 @@ body {
         padding-bottom: 14px;
     }
 
-/* labels */
 label {
     display: block;
     margin-bottom: 8px;
     color: #b8c1d1;
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 500;
 }
 
-/* inputs */
 input {
     width: 100%;
     box-sizing: border-box;
@@ -62,7 +57,7 @@ input {
     border: 1px solid #253047;
     background: #1b2435;
     color: white;
-    font-size: 16px;
+    font-size: 18px;
     outline: none;
     transition: 0.2s ease;
 }
@@ -72,7 +67,6 @@ input {
         box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
     }
 
-    /* disabled */
     input:disabled {
         background: #161d2b;
         color: rgba(255,255,255,0.7);
@@ -86,7 +80,7 @@ button {
     border-radius: 14px;
     background: linear-gradient(135deg, #1d4ed8, #2563eb);
     color: white;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
     cursor: pointer;
     transition: 0.2s ease;
@@ -98,7 +92,6 @@ button {
         box-shadow: 0 10px 22px rgba(37,99,235,0.35);
     }
 
-    /* disabled кнопка */
     button:disabled {
         background: #4b5563;
         cursor: not-allowed;
@@ -141,93 +134,50 @@ button {
         background: #1d2940;
     }
 
-    /* текст внутри */
-    .sub b {
-        color: white;
-    }
+.sub-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
 
-/* статусы */
+/* название поля */
+.sub-label {
+    color: #c7d2e3;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* значение */
+.sub-value {
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: right;
+}
+
+/* статус */
+.sub-status {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    text-align: center;
+}
+
 .status-active {
     color: #4ade80;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 22px;
 }
 
 .status-expired {
     color: #f87171;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 22px;
 }
 
 .status-inactive {
     color: #9ca3af;
-    font-weight: bold;
-}
-
-/* адаптив */
-@media (max-width: 980px) {
-
-    body {
-        padding: 20px;
-    }
-
-    .wrapper {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .card {
-        width: 100%;
-        max-width: 500px;
-    }
-}
-
-/* шапка */
-
-.topbar {
-    width: 100%;
-    height: 90px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 100;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 40px;
-    box-sizing: border-box;
-    background: rgba(10,15,25,0.78);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
-}
-
-/* логотип */
-.topbar-left img {
-    width: 180px;
-    height: auto;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
-}
-
-/* ссылки */
-.topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 34px;
-}
-
-    .topbar-right a {
-        color: rgba(255,255,255,0.88);
-        text-decoration: none;
-        font-size: 18px;
-        font-weight: 600;
-        transition: 0.2s ease;
-    }
-
-        .topbar-right a:hover {
-            color: #60a5fa;
-            transform: translateY(-1px);
-        }
-
-/* чтобы контент не залезал под шапку */
-.wrapper {
-    margin-top: 120px;
+    font-weight: 700;
+    font-size: 22px;
 }

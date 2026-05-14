@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <title>{{title}}</title>
     <link rel="stylesheet" href="/static/content/client.css">
+    <link rel="stylesheet" href="/static/content/style_header.css">
 </head>
 <body>
 <!-- Шапка -->
 <header class="topbar">
 
     <div class="topbar-left">
-        <img src="/static/img/logo.png" alt="logo">
+        <img src="/static/img/logo.jpg" alt="logo">
     </div>
 
     <div class="topbar-right">
@@ -88,26 +89,45 @@
         % if subscriptions:
             % for sub in subscriptions:
                 <div class="sub">
-                    <b>Тип:</b> {{sub['Тип']}}<br><br>
-                    <b>Цена:</b> {{sub['Цена']}} ₽<br><br>
-                    <b>Срок:</b> {{sub['Срок_дней']}} дней<br><br>
-                    <b>Дата активации:</b> {{sub['Дата_активации']}}<br><br>
 
-                    % if sub['is_expired']:
-                        <span style="color:red;">Статус: истёк</span>
-                    % elif sub['is_active']:
-                        <span style="color:green;">Статус: активен</span>
-                    % else:
-                        <span style="color:gray;">Статус: не активирован</span>
-                    % end
+                    <div class="sub-row">
+                        <span class="sub-label">Тип:</span>
+                        <span class="sub-value">{{sub['Тип']}}</span>
+                    </div>
+
+                    <div class="sub-row">
+                        <span class="sub-label">Цена:</span>
+                        <span class="sub-value">{{sub['Цена']}} ₽</span>
+                    </div>
+
+                    <div class="sub-row">
+                        <span class="sub-label">Срок:</span>
+                        <span class="sub-value">{{sub['Срок_дней']}} дней</span>
+                    </div>
+
+                    <div class="sub-row">
+                        <span class="sub-label">Дата активации:</span>
+                        <span class="sub-value">{{sub['Дата_активации']}}</span>
+                    </div>
+
+                    <div class="sub-status">
+                        % if sub['is_expired']:
+                            <span class="status-expired">Статус: истёк</span>
+
+                        % elif sub['is_active']:
+                            <span class="status-active">Статус: активен</span>
+
+                        % else:
+                            <span class="status-inactive">Статус: не активирован</span>
+                        % end
+                    </div>
+
                 </div>
             % end
         % else:
             <p>Абонементов нет</p>
         % end
     </div>
-
 </div>
-
 </body>
 </html>

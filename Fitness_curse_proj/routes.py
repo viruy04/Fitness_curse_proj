@@ -147,36 +147,36 @@ def update_client():
     return data
 
 
-# Абонементы
+# Страница абонементов
 @route('/client/<client_id:int>/subscriptions')
 @view('subscriptions')
-def my_subscriptions(client_id):
+def subscriptions_page(client_id):
 
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+    # все типы абонементов
     cur.execute("""
-        SELECT *
-        FROM fitness_postgres.мои_абонементы
-        WHERE "ID_абонемента" IN (
-            SELECT "ID_абонемента"
-            FROM fitness_postgres."абонементы_клиентов"
-            WHERE "ID_договора" IN (
-                SELECT "ID_договора"
-                FROM fitness_postgres."договоры"
-                WHERE "ID_клиента" = %s
-            )
-        )
-    """, (client_id,))
+        SELECT
+            "ID_типа_абонемента",
+            "Название",
+            "Описание",
+            "Цена",
+            "Лимит_посещений_месяц",
+            "Срок_дней"
+        FROM fitness_postgres."типы_абонементов"
+        ORDER BY "Цена"
+    """)
 
-    subs = cur.fetchall()
+    subscriptions = cur.fetchall()
 
     cur.close()
     conn.close()
 
     return dict(
-        title="Мои абонементы",
-        subs=subs
+        title='Абонементы',
+        subscriptions=subscriptions,
+        client_id=client_id
     )
 
 

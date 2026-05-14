@@ -47,6 +47,8 @@
     <Content Include="requirements.txt" />
     <Content Include="static\content\bootstrap.css" />
     <Content Include="static\content\bootstrap.min.css" />
+    <Content Include="static\content\style_header.css" />
+    <Content Include="static\content\subscriptions.css" />
     <Content Include="static\content\client.css" />
     <Content Include="static\content\login.css" />
     <Content Include="static\content\site.css" />
@@ -72,6 +74,7 @@
     <Content Include="static\scripts\respond.min.js" />
     <Content Include="static\scripts\_references.js" />
     <Content Include="views\client.tpl" />
+    <Content Include="views\subscriptions.tpl" />
     <Content Include="views\schedule.tpl" />
     <Content Include="views\login.tpl" />
     <Content Include="views\admin.tpl" />
