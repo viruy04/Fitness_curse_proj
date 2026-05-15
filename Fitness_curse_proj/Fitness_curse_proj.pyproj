@@ -78,7 +78,7 @@
     <Content Include="views\subscriptions.tpl" />
     <Content Include="views\schedule.tpl" />
     <Content Include="views\login.tpl" />
-    <Content Include="views\admin.tpl" />
+    <Content Include="views\manager.tpl" />
     <Content Include="views\layout.tpl" />
   </ItemGroup>
   <ItemGroup>

@@ -13,33 +13,48 @@ def login_page():
 
 @route('/login', method='POST')
 def login_check():
+
     login = request.forms.get('login', '').strip()
     password = request.forms.get('password', '').strip()
 
-    # Проверка на пустые поля
     if not login or not password:
-        return template('login', title='Вход', error='Пожалуйста, заполните все поля')
+        return template('login',
+                         title='Вход',
+                         error='Пожалуйста заполните поля')
 
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cur.execute("""
-        SELECT id, role, id_клиента
+        SELECT id,
+               role,
+               id_клиента,
+               id_сотрудника
         FROM fitness_postgres."юзеры"
         WHERE login=%s AND password=%s
     """, (login, password))
 
     user = cur.fetchone()
+
     cur.close()
     conn.close()
 
-    # Проверка: пользователь не найден в БД
     if not user:
-        return template('login', title='Вход', error='Неверный логин или пароль')
+        return template('login',
+                         title='Вход',
+                         error='Неверный логин или пароль')
 
-    #Успешный вход 
-    client_data = load_client_page(user['id_клиента'])
-    return template('client', **client_data)
+    # КЛИЕНТ
+    if user['role'] == 'клиент':
+        client_data = load_client_page(user['id_клиента'])
+        return template('client', **client_data)
+
+    # МЕНЕДЖЕР
+    elif user['role'] == 'менеджер':
+        manager_data = load_manager_page(user['id_сотрудника'])
+        return template('manager', **manager_data)
+
+    return "Неизвестная роль"
 
 # ЛК
 @route('/client/<client_id:int>')
@@ -94,6 +109,122 @@ def load_client_page(client_id):
         )
     )
 
+def load_manager_page(employee_id):
+
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # менеджер
+    cur.execute("""
+        SELECT
+            с."ID_сотрудника",
+            с."Фамилия",
+            с."Имя",
+            с."Отчество",
+            с."ID_филиала",
+            ф."Название" AS "Филиал"
+        FROM fitness_postgres."сотрудники" с
+        JOIN fitness_postgres."филиалы" ф
+            ON с."ID_филиала" = ф."ID_филиала"
+        WHERE с."ID_сотрудника" = %s
+    """, (employee_id,))
+
+    manager = cur.fetchone()
+
+    # расписание
+    cur.execute("""
+        SELECT
+            рг."ID_занятия",
+            тт."Название" AS "Тренировка",
+            ус."Название" AS "Сложность",
+            рг."Дата_и_время_начала",
+            рг."Количество_мест",
+            з."ID_зала",
+            с."ID_сотрудника",
+            с."Фамилия" || ' ' || с."Имя" AS "Тренер"
+
+        FROM fitness_postgres."расписание_групповых" рг
+
+        JOIN fitness_postgres."тренировки" тр
+            ON рг."ID_тренировки" = тр."ID_тренировки"
+
+        JOIN fitness_postgres."типы_тренировок" тт
+            ON тр."ID_типа_трен" = тт."ID_типа_трен"
+
+        JOIN fitness_postgres."уровни_сложности" ус
+            ON тр."ID_сложности" = ус."ID_сложности"
+
+        JOIN fitness_postgres."залы" з
+            ON рг."ID_зала" = з."ID_зала"
+
+        JOIN fitness_postgres."сотрудники" с
+            ON рг."ID_сотрудника" = с."ID_сотрудника"
+
+        WHERE з."ID_филиала" = %s
+
+        ORDER BY рг."Дата_и_время_начала"
+    """, (manager["ID_филиала"],))
+
+    schedule = cur.fetchall()
+
+    # тренировки
+    cur.execute("""
+        SELECT
+            тр."ID_тренировки",
+            тт."Название" AS "Тренировка",
+            ус."Название" AS "Сложность",
+            тр."Длительность"
+
+        FROM fitness_postgres."тренировки" тр
+
+        JOIN fitness_postgres."типы_тренировок" тт
+            ON тр."ID_типа_трен" = тт."ID_типа_трен"
+
+        JOIN fitness_postgres."уровни_сложности" ус
+            ON тр."ID_сложности" = ус."ID_сложности"
+
+        ORDER BY тт."Название", ус."Название"
+    """)
+
+    trainings = cur.fetchall()
+
+    # залы
+    cur.execute("""
+        SELECT
+            "ID_зала"
+        FROM fitness_postgres."залы"
+        WHERE "ID_филиала" = %s
+    """, (manager["ID_филиала"],))
+
+    halls = cur.fetchall()
+
+    # тренеры
+    cur.execute("""
+        SELECT
+            "ID_сотрудника",
+            "Фамилия",
+            "Имя"
+        FROM fitness_postgres."сотрудники"
+        WHERE "ID_филиала" = %s
+          AND "ID_должности" = 2
+        ORDER BY "Фамилия"
+    """, (manager["ID_филиала"],))
+
+    trainers = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return dict(
+        title='ЛК менеджера',
+        manager=manager,
+        schedule=schedule,
+        trainings=trainings,
+        halls=halls,
+        trainers=trainers,
+        success='',
+        error=''
+    )
 
 # Обновление клиента
 @route('/client/update', method='POST')
@@ -336,3 +467,114 @@ def cancel():
     conn.close()
 
     return schedule(client_id)
+
+@route('/manager/add-training', method='POST')
+@view('manager')
+def add_training():
+
+    employee_id = request.forms.get('employee_id')
+
+    training_id = request.forms.get('training_id')
+    hall_id = request.forms.get('hall_id')
+    trainer_id = request.forms.get('trainer_id')
+    datetime_start = request.forms.get('datetime_start')
+    places = request.forms.get('places')
+
+    success = ''
+    error = ''
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+
+        cur.execute("""
+            INSERT INTO fitness_postgres."расписание_групповых"
+            (
+                "ID_тренировки",
+                "ID_зала",
+                "ID_сотрудника",
+                "Дата_и_время_начала",
+                "Количество_мест"
+            )
+            VALUES (%s,%s,%s,%s,%s)
+        """, (
+            training_id,
+            hall_id,
+            trainer_id,
+            datetime_start,
+            places
+        ))
+
+        conn.commit()
+
+        success = "Занятие успешно добавлено"
+
+    except Exception as e:
+
+        conn.rollback()
+
+        error = str(e)
+
+    finally:
+
+        cur.close()
+        conn.close()
+
+    data = load_manager_page(employee_id)
+
+    data['success'] = success
+    data['error'] = error
+
+    return data
+
+@route('/manager/update-training', method='POST')
+@view('manager')
+def update_training():
+
+    training_session_id = request.forms.get('session_id')
+    places = request.forms.get('places')
+    datetime_start = request.forms.get('datetime_start')
+    employee_id = request.forms.get('employee_id')
+
+    success = ''
+    error = ''
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+
+        cur.execute("""
+            UPDATE fitness_postgres."расписание_групповых"
+            SET
+                "Дата_и_время_начала" = %s,
+                "Количество_мест" = %s
+            WHERE "ID_занятия" = %s
+        """, (
+            datetime_start,
+            places,
+            training_session_id
+        ))
+
+        conn.commit()
+
+        success = "Изменения сохранены"
+
+    except Exception as e:
+
+        conn.rollback()
+
+        error = str(e)
+
+    finally:
+
+        cur.close()
+        conn.close()
+
+    data = load_manager_page(employee_id)
+
+    data['success'] = success
+    data['error'] = error
+
+    return data
