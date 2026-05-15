@@ -272,10 +272,10 @@ def update_client():
             WHERE "ID_клиента"=%s
         """, (phone_raw, email_raw, client_id))
         conn.commit()
-        data['success'] = "✅ Данные успешно сохранены!"
+        data['success'] = "Данные успешно сохранены!"
     except Exception as e:
         conn.rollback()
-        data['error'] = f"❌ Ошибка БД: {e}"
+        data['error'] = f"Ошибка БД: {e}"
     finally:
         cur.close()
         conn.close()
