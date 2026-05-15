@@ -3,207 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <title>{{title}}</title>
-
-    <style>
-
-        body{
-            font-family: Arial;
-            background:#f5f5f5;
-            padding:40px;
-        }
-
-        .card{
-            background:white;
-            padding:20px;
-            border-radius:14px;
-            margin-bottom:20px;
-            box-shadow:0 2px 10px rgba(0,0,0,0.08);
-        }
-
-        table{
-            width:100%;
-            border-collapse:collapse;
-            margin-top:15px;
-        }
-
-        th, td{
-            padding:12px;
-            border-bottom:1px solid #ddd;
-            text-align:left;
-        }
-
-        input, select{
-            padding:10px;
-            border-radius:8px;
-            border:1px solid #ccc;
-            margin-bottom:10px;
-            width:100%;
-        }
-
-        button{
-            padding:10px 16px;
-            border:none;
-            border-radius:8px;
-            cursor:pointer;
-            background:#111;
-            color:white;
-        }
-
-        h1,h2{
-            margin-top:0;
-        }
-
-        .edit-form{
-            display:flex;
-            gap:10px;
-            align-items:center;
-        }
-
-    </style>
-
+    <link rel="stylesheet" href="/static/content/manager.css">
+    <link rel="stylesheet" href="/static/content/style_header.css">
 </head>
+
 <body>
-    % if success:
+<header class="topbar">
+    <div class="topbar-left">
+        <img src="/static/img/logo.jpg" alt="logo">
+    </div>
+    <div class="topbar-right">
+        <a href="/manager/{{manager['ID_сотрудника']}}">Расписание</a>
+        <a href="#" onclick="alert('Раздел в разработке'); return false;">Договоры</a>
+        <a href="/login" onclick="return confirm('Вы уверены, что хотите выйти?')">Выход</a>
+    </div>
+</header>
 
-        <div style="
-            background:#d4edda;
-            color:#155724;
-            padding:15px;
-            border-radius:10px;
-            margin-bottom:20px;
-        ">
-            {{success}}
-        </div>
+% if success:
+<div class="success">{{success}}</div>
+% end
 
-    % end
+% if error:
+<div class="error">{{error}}</div>
+% end
 
-
-    % if error:
-
-        <div style="
-            background:#f8d7da;
-            color:#721c24;
-            padding:15px;
-            border-radius:10px;
-            margin-bottom:20px;
-        ">
-            {{error}}
-        </div>
-
-    % end
-
-<div class="card">
-
-    <h1>Личный кабинет менеджера</h1>
-
-    <p>
-        <b>
+<div class="top-cards">
+    <div class="card">
+        <h1>Личный кабинет менеджера</h1>
+    
+        <div class="manager-name">
             {{manager['Фамилия']}} {{manager['Имя']}}
             % if manager['Отчество']:
-                {{manager['Отчество']}}
+            {{manager['Отчество']}}
             % end
-        </b>
-    </p>
+        </div>
 
-    <p>
-        Филиал:
-        <b>{{manager['Филиал']}}</b>
-    </p>
-
-</div>
-
-
-<div class="card">
-
-    <h2>Добавить занятие</h2>
-
-    <form action="/manager/add-training" method="post">
-
-        <input type="hidden"
-               name="employee_id"
-               value="{{manager['ID_сотрудника']}}">
-
-        <label>Тренировка</label>
-
-        <select name="training_id">
-
-            % for t in trainings:
-
-                <option value="{{t['ID_тренировки']}}">
-
-                    {{t['Тренировка']}}
+        <div class="manager-details">
+            <div class="manager-detail">
+                <span class="detail-label">Филиал:</span>
+                <b>{{manager['Филиал']}}</b>
+            </div>
+            <div class="manager-detail">
+                <span class="detail-label">Адрес:</span>
+                <b>{{manager['Адрес']}}</b>
+            </div>
+            <div class="manager-detail">
+                <span class="detail-label">Время работы:</span>
+                <b>
+                    % if manager['Время_открытия'] and manager['Время_закрытия']:
+                    {{manager['Время_открытия'].strftime('%H:%M')}} — {{manager['Время_закрытия'].strftime('%H:%M')}}
+                    % else:
                     —
-                    {{t['Сложность']}}
-
-                    % if t['Длительность']:
-                        ({{t['Длительность']}})
                     % end
+                </b>
+            </div>
+            <div class="manager-detail">
+                <span class="detail-label">Телефон:</span>
+                <b>{{manager['Телефон']}}</b>
+            </div>
+            <div class="manager-detail">
+                <span class="detail-label">Дата рождения:</span>
+                <b>
+                    % if manager['Дата_рождения']:
+                    {{manager['Дата_рождения'].strftime('%d.%m.%Y')}}
+                    % else:
+                    —
+                    % end
+                </b>
+            </div>
+        </div>
 
+        <div class="manager-responsibilities">
+            <b>Обязанности:</b> отвечает за составление расписания, его изменения и составление договоров
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Добавить занятие</h2>
+        <form action="/manager/add-training" method="post">
+            <input type="hidden" name="employee_id" value="{{manager['ID_сотрудника']}}">
+            <label>Тренировка</label>
+            <select name="training_id">
+                % for t in trainings:
+                <option value="{{t['ID_тренировки']}}">
+                    {{t['Тренировка']}} — {{t['Сложность']}}
+                    % if t['Длительность']:
+                    ({{t['Длительность']}})
+                    % end
                 </option>
-
-            % end
-
-        </select>
-
-
-        <label>Зал</label>
-
-        <select name="hall_id">
-
-            % for h in halls:
-
-                <option value="{{h['ID_зала']}}">
-                    Зал #{{h['ID_зала']}}
-                </option>
-
-            % end
-
-        </select>
-
-
-        <label>Тренер</label>
-
-        <select name="trainer_id">
-
-            % for tr in trainers:
-
-                <option value="{{tr['ID_сотрудника']}}">
-                    {{tr['Фамилия']}} {{tr['Имя']}}
-                </option>
-
-            % end
-
-        </select>
-
-
-        <label>Дата и время</label>
-
-        <input type="datetime-local"
-               name="datetime_start"
-               required>
-
-        <label>Количество мест</label>
-
-        <input type="number"
-               name="places"
-               required>
-
-        <button type="submit">
-            Добавить занятие
-        </button>
-
-    </form>
-
+                % end
+            </select>
+            <label>Зал</label>
+            <select name="hall_id">
+                % for h in halls:
+                <option value="{{h['ID_зала']}}">Зал #{{h['ID_зала']}}</option>
+                % end
+            </select>
+            <label>Тренер</label>
+            <select name="trainer_id">
+                % for tr in trainers:
+                <option value="{{tr['ID_сотрудника']}}">{{tr['Фамилия']}} {{tr['Имя']}}</option>
+                % end
+            </select>
+            <label>Дата и время</label>
+            <input type="datetime-local" name="datetime_start" required>
+            <label>Количество мест</label>
+            <input type="number" name="places" required>
+            <button type="submit">Добавить занятие</button>
+        </form>
+    </div>
 </div>
 
-
-
-<div class="card">
-
+<div class="card schedule-card">
     <h2>Расписание филиала</h2>
-
     <table>
-
         <tr>
             <th>ID</th>
             <th>Тренировка</th>
@@ -214,62 +127,27 @@
             <th>Мест</th>
             <th>Редактирование</th>
         </tr>
-
         % for s in schedule:
-
         <tr>
-
             <td>{{s['ID_занятия']}}</td>
-
             <td>{{s['Тренировка']}}</td>
-
             <td>{{s['Сложность']}}</td>
-
             <td>{{s['Дата_и_время_начала']}}</td>
-
             <td>{{s['Тренер']}}</td>
-
             <td>Зал #{{s['ID_зала']}}</td>
-
             <td>{{s['Количество_мест']}}</td>
-
             <td>
-
-                <form class="edit-form"
-                      action="/manager/update-training"
-                      method="post">
-
-                    <input type="hidden"
-                           name="employee_id"
-                           value="{{manager['ID_сотрудника']}}">
-
-                    <input type="hidden"
-                           name="session_id"
-                           value="{{s['ID_занятия']}}">
-
-                    <input type="datetime-local"
-                           name="datetime_start"
-                           value="{{s['Дата_и_время_начала'].strftime('%Y-%m-%dT%H:%M')}}">
-
-                    <input type="number"
-                           name="places"
-                           value="{{s['Количество_мест']}}"
-                           required>
-
-                    <button type="submit">
-                        Сохранить
-                    </button>
-
+                <form class="edit-form" action="/manager/update-training" method="post">
+                    <input type="hidden" name="employee_id" value="{{manager['ID_сотрудника']}}">
+                    <input type="hidden" name="session_id" value="{{s['ID_занятия']}}">
+                    <input type="datetime-local" name="datetime_start" value="{{s['Дата_и_время_начала'].strftime('%Y-%m-%dT%H:%M')}}">
+                    <input type="number" name="places" value="{{s['Количество_мест']}}" required>
+                    <button type="submit">Сохранить</button>
                 </form>
-
             </td>
-
         </tr>
-
         % end
-
     </table>
-
 </div>
 
 </body>

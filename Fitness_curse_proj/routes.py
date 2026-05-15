@@ -121,8 +121,13 @@ def load_manager_page(employee_id):
             с."Фамилия",
             с."Имя",
             с."Отчество",
+            с."Дата_рождения",
+            с."Телефон",
             с."ID_филиала",
-            ф."Название" AS "Филиал"
+            ф."Название" AS "Филиал",
+            ф."Адрес",
+            ф."Время_открытия",
+            ф."Время_закрытия"
         FROM fitness_postgres."сотрудники" с
         JOIN fitness_postgres."филиалы" ф
             ON с."ID_филиала" = ф."ID_филиала"
@@ -578,3 +583,10 @@ def update_training():
     data['error'] = error
 
     return data
+
+# Страница менеджера по прямому заходу
+@route('/manager/<employee_id:int>')
+@view('manager')
+def manager_page(employee_id):
+    return load_manager_page(employee_id)
+

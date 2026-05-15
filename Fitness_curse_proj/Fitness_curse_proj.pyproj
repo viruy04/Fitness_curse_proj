@@ -75,6 +75,7 @@
     <Content Include="static\scripts\respond.min.js" />
     <Content Include="static\scripts\_references.js" />
     <Content Include="views\client.tpl" />
+    <Content Include="views\contracts.tpl" />
     <Content Include="views\subscriptions.tpl" />
     <Content Include="views\schedule.tpl" />
     <Content Include="views\login.tpl" />
