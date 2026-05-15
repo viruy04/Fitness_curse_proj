@@ -217,3 +217,15 @@ form[action="/manager/add-training"] {
     margin-bottom: 16px;
     font-size: 18px;
 }
+
+select option {
+    background: #111827;
+    color: #ffffff;
+    padding: 8px 0;
+}
+
+    select option:hover,
+    select option:checked {
+        background: #2563eb;
+        color: #ffffff;
+    }
