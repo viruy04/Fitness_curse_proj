@@ -52,7 +52,6 @@
     <Content Include="static\content\subscriptions.css" />
     <Content Include="static\content\client.css" />
     <Content Include="static\content\login.css" />
-    <Content Include="static\content\site.css" />
     <Content Include="static\fonts\glyphicons-halflings-regular.eot" />
     <Content Include="static\fonts\glyphicons-halflings-regular.svg" />
     <Content Include="static\fonts\glyphicons-halflings-regular.ttf" />
