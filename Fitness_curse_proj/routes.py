@@ -44,19 +44,17 @@ def login_check():
                          title='Вход',
                          error='Неверный логин или пароль')
 
-    # КЛИЕНТ
     if user['role'] == 'клиент':
         client_data = load_client_page(user['id_клиента'])
         return template('client', **client_data)
 
-    # МЕНЕДЖЕР
     elif user['role'] == 'менеджер':
         manager_data = load_manager_page(user['id_сотрудника'])
         return template('manager', **manager_data)
 
     return "Неизвестная роль"
 
-# ЛК
+
 @route('/client/<client_id:int>')
 @view('client')
 def client_page(client_id):
@@ -68,7 +66,6 @@ def load_client_page(client_id):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # клиент
     cur.execute("""
         SELECT "ID_клиента","Фамилия","Имя","Отчество","Телефон","Электронная_почта"
         FROM fitness_postgres."клиенты"
@@ -76,7 +73,6 @@ def load_client_page(client_id):
     """, (client_id,))
     client = cur.fetchone()
 
-    # абонементы
     cur.execute("""
         SELECT
             ак."ID_абонемента",
@@ -109,12 +105,12 @@ def load_client_page(client_id):
         )
     )
 
+
 def load_manager_page(employee_id):
 
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # менеджер
     cur.execute("""
         SELECT
             с."ID_сотрудника",
@@ -136,7 +132,6 @@ def load_manager_page(employee_id):
 
     manager = cur.fetchone()
 
-    # расписание
     cur.execute("""
         SELECT
             рг."ID_занятия",
@@ -147,63 +142,47 @@ def load_manager_page(employee_id):
             з."ID_зала",
             с."ID_сотрудника",
             с."Фамилия" || ' ' || с."Имя" AS "Тренер"
-
         FROM fitness_postgres."расписание_групповых" рг
-
         JOIN fitness_postgres."тренировки" тр
             ON рг."ID_тренировки" = тр."ID_тренировки"
-
         JOIN fitness_postgres."типы_тренировок" тт
             ON тр."ID_типа_трен" = тт."ID_типа_трен"
-
         JOIN fitness_postgres."уровни_сложности" ус
             ON тр."ID_сложности" = ус."ID_сложности"
-
         JOIN fitness_postgres."залы" з
             ON рг."ID_зала" = з."ID_зала"
-
         JOIN fitness_postgres."сотрудники" с
             ON рг."ID_сотрудника" = с."ID_сотрудника"
-
         WHERE з."ID_филиала" = %s
-
         ORDER BY рг."Дата_и_время_начала"
     """, (manager["ID_филиала"],))
 
     schedule = cur.fetchall()
 
-    # тренировки
     cur.execute("""
         SELECT
             тр."ID_тренировки",
             тт."Название" AS "Тренировка",
             ус."Название" AS "Сложность",
             тр."Длительность"
-
         FROM fitness_postgres."тренировки" тр
-
         JOIN fitness_postgres."типы_тренировок" тт
             ON тр."ID_типа_трен" = тт."ID_типа_трен"
-
         JOIN fitness_postgres."уровни_сложности" ус
             ON тр."ID_сложности" = ус."ID_сложности"
-
         ORDER BY тт."Название", ус."Название"
     """)
 
     trainings = cur.fetchall()
 
-    # залы
     cur.execute("""
-        SELECT
-            "ID_зала"
+        SELECT "ID_зала"
         FROM fitness_postgres."залы"
         WHERE "ID_филиала" = %s
     """, (manager["ID_филиала"],))
 
     halls = cur.fetchall()
 
-    # тренеры
     cur.execute("""
         SELECT
             "ID_сотрудника",
@@ -220,6 +199,8 @@ def load_manager_page(employee_id):
     cur.close()
     conn.close()
 
+    success = '✓ Занятие успешно добавлено' if request.query.get('success') else ''
+
     return dict(
         title='ЛК менеджера',
         manager=manager,
@@ -227,99 +208,70 @@ def load_manager_page(employee_id):
         trainings=trainings,
         halls=halls,
         trainers=trainers,
-        success='',
+        success=success,
         error=''
     )
 
-# Обновление клиента
+
 @route('/client/update', method='POST')
 @view('client')
 def update_client():
 
     client_id = request.forms.get('id')
-
     phone_raw = request.forms.getunicode('phone', '').strip()
     email_raw = request.forms.getunicode('email', '').strip()
 
     errors = []
 
-    # Email
     if not email_raw:
         errors.append("Поле Email обязательно.")
-
     elif not re.match(
         r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
         email_raw
     ):
-        errors.append(
-            "Некорректный формат Email (пример: name@mail.ru)."
-        )
+        errors.append("Некорректный формат Email (пример: name@mail.ru).")
 
-    # Телефон
     if not phone_raw:
         errors.append("Поле Телефон обязательно.")
-
     elif not re.match(
         r'^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$',
         phone_raw
     ):
-        errors.append(
-            "Формат телефона должен быть: +7 (XXX) XXX-XX-XX"
-        )
+        errors.append("Формат телефона должен быть: +7 (XXX) XXX-XX-XX")
 
-    # если ошибки
     if errors:
-
         data = load_client_page(client_id)
-
         data['error'] = " ".join(errors)
         data['form_phone'] = phone_raw
         data['form_email'] = email_raw
-
         return data
 
     conn = get_connection()
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             UPDATE fitness_postgres."клиенты"
-            SET
-                "Телефон"=%s,
-                "Электронная_почта"=%s
+            SET "Телефон"=%s, "Электронная_почта"=%s
             WHERE "ID_клиента"=%s
-        """, (
-            phone_raw,
-            email_raw,
-            client_id
-        ))
-
+        """, (phone_raw, email_raw, client_id))
         conn.commit()
 
     except Exception as e:
-
         conn.rollback()
-
         data = load_client_page(client_id)
-
         data['error'] = f"Ошибка БД: {e}"
-
         return data
 
     finally:
-
         cur.close()
         conn.close()
 
     data = load_client_page(client_id)
-
     data['success'] = "Данные успешно сохранены!"
-
     return data
 
 
-# Страница абонементов
 @route('/client/<client_id:int>/subscriptions')
 @view('subscriptions')
 def subscriptions_page(client_id):
@@ -327,7 +279,6 @@ def subscriptions_page(client_id):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # все типы абонементов
     cur.execute("""
         SELECT
             "ID_типа_абонемента",
@@ -352,7 +303,6 @@ def subscriptions_page(client_id):
     )
 
 
-# Расписание групповых тренировок
 @route('/schedule/<client_id:int>')
 @view('schedule')
 def schedule(client_id):
@@ -360,13 +310,12 @@ def schedule(client_id):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # сортировка по филиалу
     cur.execute("""
         SELECT "ID_филиала"
         FROM fitness_postgres."клиенты"
         WHERE "ID_клиента" = %s
     """, (client_id,))
-    
+
     client_branch = cur.fetchone()["ID_филиала"]
 
     cur.execute("""
@@ -412,7 +361,6 @@ def schedule(client_id):
     schedule_list = []
 
     for r in rows:
-
         dt = r["Дата_и_время_начала"]
         dur = r["Длительность"]
 
@@ -448,7 +396,6 @@ def schedule(client_id):
     )
 
 
-# Запись
 @route('/group-training/signup', method='POST')
 @view('schedule')
 def signup():
@@ -467,7 +414,6 @@ def signup():
         conn.commit()
         success = "Вы успешно записались"
         error = ""
-
     except Exception as e:
         conn.rollback()
         success = ""
@@ -479,7 +425,6 @@ def signup():
     return schedule(client_id)
 
 
-# Отмена записи
 @route('/group-training/cancel', method='POST')
 @view('schedule')
 def cancel():
@@ -498,7 +443,6 @@ def cancel():
         conn.commit()
         success = "Запись отменена"
         error = ""
-
     except Exception as e:
         conn.rollback()
         success = ""
@@ -509,26 +453,21 @@ def cancel():
 
     return schedule(client_id)
 
+
 @route('/manager/add-training', method='POST')
-@view('manager')
 def add_training():
 
     employee_id = request.forms.get('employee_id')
-
     training_id = request.forms.get('training_id')
     hall_id = request.forms.get('hall_id')
     trainer_id = request.forms.get('trainer_id')
     datetime_start = request.forms.get('datetime_start')
     places = request.forms.get('places')
 
-    success = ''
-    error = ''
-
     conn = get_connection()
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             INSERT INTO fitness_postgres."расписание_групповых"
             (
@@ -539,37 +478,22 @@ def add_training():
                 "Количество_мест"
             )
             VALUES (%s,%s,%s,%s,%s)
-        """, (
-            training_id,
-            hall_id,
-            trainer_id,
-            datetime_start,
-            places
-        ))
-
+        """, (training_id, hall_id, trainer_id, datetime_start, places))
         conn.commit()
 
-        success = "Занятие успешно добавлено"
-
     except Exception as e:
-
         conn.rollback()
-
-        error = str(e)
+        data = load_manager_page(employee_id)
+        data['error'] = str(e)
+        return template('manager', **data)
 
     finally:
-
         cur.close()
         conn.close()
 
-    data = load_manager_page(employee_id)
+    redirect(f'/manager/{employee_id}?success=1')
 
-    data['success'] = success
-    data['error'] = error
 
-    return data
-
-# Обновление тренировки
 @route('/manager/update-training', method='POST')
 @view('manager')
 def update_training():
@@ -579,60 +503,46 @@ def update_training():
     datetime_start = request.forms.get('datetime_start')
     employee_id = request.forms.get('employee_id')
 
-    success = ''
-    error = ''
-
     conn = get_connection()
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             UPDATE fitness_postgres."расписание_групповых"
             SET
                 "Дата_и_время_начала" = %s,
                 "Количество_мест" = %s
             WHERE "ID_занятия" = %s
-        """, (
-            datetime_start,
-            places,
-            training_session_id
-        ))
-
+        """, (datetime_start, places, training_session_id))
         conn.commit()
-
         success = "Изменения сохранены"
 
     except Exception as e:
-
         conn.rollback()
-
+        success = ''
         error = str(e)
 
     finally:
-
         cur.close()
         conn.close()
 
     data = load_manager_page(employee_id)
-
     data['success'] = success
     data['error'] = error
-
     return data
 
-# Страница менеджера по прямому заходу
+
 @route('/manager/<employee_id:int>')
 @view('manager')
 def manager_page(employee_id):
     return load_manager_page(employee_id)
 
-# Функция для договоров
+
 def load_contracts_page(employee_id):
+
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # менеджер
     cur.execute("""
         SELECT "ID_сотрудника", "Фамилия", "Имя", "Отчество"
         FROM fitness_postgres."сотрудники"
@@ -640,7 +550,6 @@ def load_contracts_page(employee_id):
     """, (employee_id,))
     manager = cur.fetchone()
 
-    # список договоров
     cur.execute("""
         SELECT
             д."ID_договора",
@@ -658,7 +567,6 @@ def load_contracts_page(employee_id):
     """, (employee_id,))
     contracts = cur.fetchall()
 
-    # список клиентов для формы
     cur.execute("""
         SELECT к."ID_клиента", к."Фамилия" || ' ' || к."Имя" AS "Имя"
         FROM fitness_postgres."клиенты" к
@@ -691,7 +599,7 @@ def load_contracts_page(employee_id):
         error=''
     )
 
-# Страница договоров
+
 @route('/manager/contracts/<employee_id:int>')
 @view('contracts')
 def contracts_page(employee_id):
@@ -700,6 +608,7 @@ def contracts_page(employee_id):
 
 @route('/manager/contracts/create', method='POST')
 def create_contract():
+
     employee_id = request.forms.get('employee_id')
     client_id = request.forms.get('client_id')
 
@@ -713,13 +622,15 @@ def create_contract():
             VALUES (%s, %s, CURRENT_DATE, 1)
         """, (client_id, employee_id))
         conn.commit()
+
     except Exception as e:
         conn.rollback()
         data = load_contracts_page(employee_id)
         data['error'] = str(e)
         return template('contracts', **data)
+
     finally:
         cur.close()
         conn.close()
 
-    redirect(f'/manager/contracts/{employee_id}')
+    redirect(f'/manager/contracts/{employee_id}?success=1')
