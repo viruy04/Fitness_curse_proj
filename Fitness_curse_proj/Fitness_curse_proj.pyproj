@@ -36,6 +36,9 @@
     <Compile Include="db.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="hash_users.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="routes.py" />
   </ItemGroup>
   <ItemGroup>
