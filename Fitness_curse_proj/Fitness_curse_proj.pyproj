@@ -30,6 +30,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.py" />
+    <Compile Include="backup.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="db.py">
       <SubType>Code</SubType>
     </Compile>
