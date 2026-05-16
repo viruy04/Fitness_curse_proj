@@ -235,51 +235,87 @@ def load_manager_page(employee_id):
 @route('/client/update', method='POST')
 @view('client')
 def update_client():
+
     client_id = request.forms.get('id')
+
     phone_raw = request.forms.getunicode('phone', '').strip()
     email_raw = request.forms.getunicode('email', '').strip()
+
     errors = []
 
-    # Валидация Email
+    # Email
     if not email_raw:
         errors.append("Поле Email обязательно.")
-    elif not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email_raw):
-        errors.append("Некорректный формат Email (пример: name@mail.ru).")
 
-    # Валидация телефона 
+    elif not re.match(
+        r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+        email_raw
+    ):
+        errors.append(
+            "Некорректный формат Email (пример: name@mail.ru)."
+        )
+
+    # Телефон
     if not phone_raw:
         errors.append("Поле Телефон обязательно.")
-    elif not re.match(r'^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$', phone_raw):
-        errors.append("Формат телефона должен быть: +7 (XXX) XXX-XX-XX")
-        
-    # Загружаем базовые данные клиента
-    data = load_client_page(client_id)
-    
-    # Если есть ошибки, возвращаем форму с ними
+
+    elif not re.match(
+        r'^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$',
+        phone_raw
+    ):
+        errors.append(
+            "Формат телефона должен быть: +7 (XXX) XXX-XX-XX"
+        )
+
+    # если ошибки
     if errors:
+
+        data = load_client_page(client_id)
+
         data['error'] = " ".join(errors)
-        data['form_phone'] = phone_raw  # сохраняем то, что ввёл юзер
+        data['form_phone'] = phone_raw
         data['form_email'] = email_raw
+
         return data
-        
-    # Если всё прошло, обновляем БД
+
     conn = get_connection()
     cur = conn.cursor()
+
     try:
+
         cur.execute("""
             UPDATE fitness_postgres."клиенты"
-            SET "Телефон"=%s, "Электронная_почта"=%s
+            SET
+                "Телефон"=%s,
+                "Электронная_почта"=%s
             WHERE "ID_клиента"=%s
-        """, (phone_raw, email_raw, client_id))
+        """, (
+            phone_raw,
+            email_raw,
+            client_id
+        ))
+
         conn.commit()
-        data['success'] = "Данные успешно сохранены!"
+
     except Exception as e:
+
         conn.rollback()
+
+        data = load_client_page(client_id)
+
         data['error'] = f"Ошибка БД: {e}"
+
+        return data
+
     finally:
+
         cur.close()
         conn.close()
-        
+
+    data = load_client_page(client_id)
+
+    data['success'] = "Данные успешно сохранены!"
+
     return data
 
 
@@ -342,7 +378,7 @@ def schedule(client_id):
               FROM fitness_postgres."филиалы"
               WHERE "ID_филиала" = %s
           )
-        ORDER BY "Дата_и_время_начала"
+        ORDER BY "Дата_и_время_начала" DESC
     """, (client_branch,))
 
     rows = cur.fetchall()
@@ -533,6 +569,7 @@ def add_training():
 
     return data
 
+# Обновление тренировки
 @route('/manager/update-training', method='POST')
 @view('manager')
 def update_training():
