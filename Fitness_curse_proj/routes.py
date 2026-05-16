@@ -1,4 +1,4 @@
-from bottle import route, view, request, template
+from bottle import route, view, request, template, redirect
 from datetime import datetime
 import re
 from db import get_connection
@@ -627,3 +627,99 @@ def update_training():
 def manager_page(employee_id):
     return load_manager_page(employee_id)
 
+# Функция для договоров
+def load_contracts_page(employee_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # менеджер
+    cur.execute("""
+        SELECT "ID_сотрудника", "Фамилия", "Имя", "Отчество"
+        FROM fitness_postgres."сотрудники"
+        WHERE "ID_сотрудника" = %s
+    """, (employee_id,))
+    manager = cur.fetchone()
+
+    # список договоров
+    cur.execute("""
+        SELECT
+            д."ID_договора",
+            к."Фамилия" || ' ' || к."Имя" AS "Клиент",
+            д."Дата_заключения",
+            д."Дата_окончания",
+            с."Название" AS "Состояние"
+        FROM fitness_postgres."договоры" д
+        JOIN fitness_postgres."клиенты" к
+            ON д."ID_клиента" = к."ID_клиента"
+        JOIN fitness_postgres."состояние_договора" с
+            ON д."ID_состояния" = с."ID_состояния"
+        WHERE д."ID_сотрудника" = %s
+        ORDER BY д."Дата_заключения" DESC
+    """, (employee_id,))
+    contracts = cur.fetchall()
+
+    # список клиентов для формы
+    cur.execute("""
+        SELECT к."ID_клиента", к."Фамилия" || ' ' || к."Имя" AS "Имя"
+        FROM fitness_postgres."клиенты" к
+        WHERE к."ID_филиала" = (
+            SELECT "ID_филиала"
+            FROM fitness_postgres."сотрудники"
+            WHERE "ID_сотрудника" = %s
+        )
+        AND NOT EXISTS (
+            SELECT 1
+            FROM fitness_postgres."договоры" д
+            WHERE д."ID_клиента" = к."ID_клиента"
+              AND д."ID_состояния" = 1
+        )
+        ORDER BY к."Фамилия"
+    """, (employee_id,))
+    clients = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    success = '✓ Договор успешно создан' if request.query.get('success') else ''
+
+    return dict(
+        title='Договоры',
+        manager=manager,
+        contracts=contracts,
+        clients=clients,
+        success=success,
+        error=''
+    )
+
+# Страница договоров
+@route('/manager/contracts/<employee_id:int>')
+@view('contracts')
+def contracts_page(employee_id):
+    return load_contracts_page(employee_id)
+
+
+@route('/manager/contracts/create', method='POST')
+def create_contract():
+    employee_id = request.forms.get('employee_id')
+    client_id = request.forms.get('client_id')
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            INSERT INTO fitness_postgres."договоры"
+            ("ID_клиента", "ID_сотрудника", "Дата_заключения", "ID_состояния")
+            VALUES (%s, %s, CURRENT_DATE, 1)
+        """, (client_id, employee_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        data = load_contracts_page(employee_id)
+        data['error'] = str(e)
+        return template('contracts', **data)
+    finally:
+        cur.close()
+        conn.close()
+
+    redirect(f'/manager/contracts/{employee_id}')

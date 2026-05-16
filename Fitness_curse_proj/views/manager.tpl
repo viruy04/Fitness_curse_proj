@@ -14,7 +14,7 @@
     </div>
     <div class="topbar-right">
         <a href="/manager/{{manager['ID_сотрудника']}}">Расписание</a>
-        <a href="#" onclick="alert('Раздел в разработке'); return false;">Договоры</a>
+        <a href="/manager/contracts/{{manager['ID_сотрудника']}}">Договоры</a>
         <a href="/login" onclick="return confirm('Вы уверены, что хотите выйти?')">Выход</a>
     </div>
 </header>
