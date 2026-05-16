@@ -47,6 +47,7 @@
     <Content Include="requirements.txt" />
     <Content Include="static\content\bootstrap.css" />
     <Content Include="static\content\bootstrap.min.css" />
+    <Content Include="static\content\contracts.css" />
     <Content Include="static\content\manager.css" />
     <Content Include="static\content\schedule.css" />
     <Content Include="static\content\style_header.css" />
