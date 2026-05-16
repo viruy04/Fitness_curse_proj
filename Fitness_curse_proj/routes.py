@@ -503,6 +503,9 @@ def update_training():
     datetime_start = request.forms.get('datetime_start')
     employee_id = request.forms.get('employee_id')
 
+    success = ''
+    error = ''
+
     conn = get_connection()
     cur = conn.cursor()
 
@@ -519,7 +522,6 @@ def update_training():
 
     except Exception as e:
         conn.rollback()
-        success = ''
         error = str(e)
 
     finally:
