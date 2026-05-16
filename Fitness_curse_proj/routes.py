@@ -1,5 +1,6 @@
 from bottle import route, view, request, template, redirect
 from datetime import datetime
+import hashlib
 import re
 from db import get_connection
 import psycopg2.extras
@@ -16,6 +17,9 @@ def login_check():
 
     login = request.forms.get('login', '').strip()
     password = request.forms.get('password', '').strip()
+    hashed_password = hashlib.sha256(
+        password.encode()
+    ).hexdigest()
 
     if not login or not password:
         return template('login',
@@ -32,7 +36,7 @@ def login_check():
                id_сотрудника
         FROM fitness_postgres."юзеры"
         WHERE login=%s AND password=%s
-    """, (login, password))
+    """, (login, hashed_password))
 
     user = cur.fetchone()
 
